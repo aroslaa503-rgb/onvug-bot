@@ -31,35 +31,39 @@ async def show_profile(message: Message, edit: bool = False):
     await db.reset_daily_limits_if_needed(user_id)
     user = await db.get_user(user_id)
 
-    # Считаем дни с нами
     registered = datetime.fromisoformat(user["registered_at"])
     days = (datetime.now() - registered).days
 
-    # Лимиты
     max_requests = config.FREE_DAILY_REQUESTS
     max_images = config.FREE_DAILY_IMAGES
-    if user["subscription"] and user["sub_until"]:
-        if datetime.fromisoformat(user["sub_until"]) > datetime.now():
-            tariff = config.TARIFFS.get(user["subscription"])
-            if tariff:
-                max_requests = tariff["daily_requests"]
-                max_images = tariff["daily_images"]
+    if user.get("subscription") and user.get("sub_until"):
+        try:
+            if datetime.fromisoformat(user["sub_until"]) > datetime.now():
+                tariff = config.TARIFFS.get(user["subscription"])
+                if tariff:
+                    max_requests = tariff["daily_requests"]
+                    max_images = tariff["daily_images"]
+        except Exception:
+            pass
 
-    # Имя бота (для реф. ссылки)
     bot_username = (await message.bot.me()).username
+
+    # Новые названия балансов
+    main_balance = user.get("main_balance") or user.get("paid_balance") or 0
+    bonus_balance = user.get("bonus_balance") or 0
+    withdrawable_balance = user.get("withdrawable_balance") or 0
 
     text = config.PROFILE_TEMPLATE.format(
         user_id=user_id,
         days_with_us=days,
-        free_balance=round(user["free_balance"], 1),
-        bonus_balance=round(user["bonus_balance"], 1),
-        paid_balance=round(user["paid_balance"], 1),
-        used_requests=user["used_requests_today"],
+        main_balance=round(main_balance, 1),
+        bonus_balance=round(bonus_balance, 1),
+        withdrawable_balance=round(withdrawable_balance, 1),
+        used_requests=user.get("used_requests_today") or 0,
         max_requests=max_requests,
-        used_images=user["used_images_today"],
+        used_images=user.get("used_images_today") or 0,
         max_images=max_images,
         bot_username=bot_username,
-        ref_percent=config.REFERRAL_PERCENT
     )
 
     if edit:
@@ -71,15 +75,13 @@ async def show_profile(message: Message, edit: bool = False):
 @router.message(F.text == "💎 Тарифы")
 @router.callback_query(F.data == "tariffs")
 async def tariffs_handler(event: Message | CallbackQuery):
-    text = "💎 <b>Тарифы</b>\n\n"
+    text = config.TARIFFS_TEXT + "\n\n"
     for key, t in config.TARIFFS.items():
         text += (
-            f"<b>{t['name']}</b> — {t['price']} ₽\n"
-            f"• {t['daily_requests']} запросов/день\n"
-            f"• {t['daily_images']} картинок/день\n"
-            f"• на {t['days']} дней\n\n"
+            f"<b>{t['name']}</b> — <b>{t['price']} ₽</b>\n"
+            f"├ {t['daily_requests']} запросов / день\n"
+            f"└ {t['daily_images']} картинок / день\n\n"
         )
-    text += "Выбери тариф:"
 
     if isinstance(event, CallbackQuery):
         await event.message.edit_text(text, reply_markup=kb.tariffs_kb(), parse_mode=ParseMode.HTML)
@@ -93,8 +95,8 @@ async def tariffs_handler(event: Message | CallbackQuery):
 async def topup_handler(event: Message | CallbackQuery):
     text = (
         "💰 <b>Пополнение баланса</b>\n\n"
-        "Выбери сумму или введи свою.\n"
-        "После оплаты баланс появится автоматически (или после проверки админом)."
+        "Выбери сумму.\n"
+        "После оплаты средства появятся на основном балансе."
     )
     if isinstance(event, CallbackQuery):
         await event.message.edit_text(text, reply_markup=kb.topup_kb(), parse_mode=ParseMode.HTML)
@@ -106,19 +108,34 @@ async def topup_handler(event: Message | CallbackQuery):
 @router.message(F.text == "🔗 Рефералка")
 @router.callback_query(F.data == "referral")
 async def referral_handler(event: Message | CallbackQuery):
-    user_id = event.from_user.id
-    stats = await db.get_referral_stats(user_id)
+    user_id = event.from_user.id if isinstance(event, Message) else event.from_user.id
     bot_username = (await event.bot.me()).username
 
-    text = (
-        f"🔗 <b>Реферальная система</b>\n\n"
-        f"Твоя ссылка:\n"
-        f"<code>https://t.me/{bot_username}?start={user_id}</code>\n\n"
-        f"👥 Приглашено: {stats['count']}\n"
-        f"💵 Заработано: {stats['earned']} ₽\n\n"
-        f"Ты получаешь <b>{config.REFERRAL_PERCENT}%</b> с каждого пополнения друга.\n"
-        f"Новичок получает {config.REFERRAL_BONUS_FOR_NEWBIE} ₽ бонусного баланса,\n"
-        f"а ты — {config.REFERRAL_BONUS_FOR_INVITER} ₽."
+    # Статистика (пока простая)
+    invited = 0
+    earned = 0.0
+    try:
+        import aiosqlite
+        async with aiosqlite.connect(config.DB_PATH) as conn:
+            async with conn.execute(
+                "SELECT COUNT(*), COALESCE(SUM(earned), 0) FROM referrals WHERE referrer_id = ?",
+                (user_id,)
+            ) as cursor:
+                row = await cursor.fetchone()
+                if row:
+                    invited = row[0] or 0
+                    earned = row[1] or 0.0
+    except Exception:
+        pass
+
+    text = config.REFERRAL_TEXT.format(
+        bot_username=bot_username,
+        user_id=user_id,
+        invited=invited,
+        earned=round(earned, 1),
+        percent=config.REFERRAL_PERCENT,
+        newbie_bonus=config.REFERRAL_BONUS_FOR_NEWBIE,
+        inviter_bonus=config.REFERRAL_BONUS_FOR_INVITER,
     )
 
     if isinstance(event, CallbackQuery):
@@ -126,25 +143,3 @@ async def referral_handler(event: Message | CallbackQuery):
         await event.answer()
     else:
         await event.answer(text, parse_mode=ParseMode.HTML)
-
-
-@router.callback_query(F.data == "back_to_menu")
-async def back_to_menu(callback: CallbackQuery):
-    await callback.message.delete()
-    await callback.message.answer("Главное меню:", reply_markup=kb.main_menu_kb())
-    await callback.answer()
-
-
-# ================== ЗАГЛУШКИ ==================
-
-@router.callback_query(F.data.startswith("soon_"))
-async def soon_handler(callback: CallbackQuery):
-    feature = callback.data.replace("soon_", "")
-    names = {
-        "animate": "Оживление фото",
-        "site": "Создание сайтов",
-        "miniapp": "Создание Mini App",
-        "deploy": "Деплой на сервер"
-    }
-    name = names.get(feature, "Эта функция")
-    await callback.answer(f"«{name}» появится позже. Мы оставили под неё место в коде.", show_alert=True)
