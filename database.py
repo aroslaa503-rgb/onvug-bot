@@ -17,12 +17,12 @@ async def init_db():
                 registered_at TEXT,
                 referrer_id INTEGER,
                 
-                -- Балансы (добавлены все, которые использует код)
+                -- ВСЕ балансы, которые требует код
                 free_balance REAL DEFAULT 20.0,
-                main_balance REAL DEFAULT 0,
-                bonus_balance REAL DEFAULT 0,
-                withdrawable_balance REAL DEFAULT 0,
-                paid_balance REAL DEFAULT 0,
+                main_balance REAL DEFAULT 0,          
+                bonus_balance REAL DEFAULT 0,         
+                withdrawable_balance REAL DEFAULT 0,  
+                paid_balance REAL DEFAULT 0,          
                 
                 subscription TEXT DEFAULT NULL,
                 sub_until TEXT DEFAULT NULL,
@@ -72,17 +72,17 @@ async def init_db():
                 title TEXT,
                 is_active INTEGER DEFAULT 1,
                 
-                custom_tariffs TEXT DEFAULT NULL,
+                custom_tariffs TEXT DEFAULT NULL,   
                 
-                payment_type TEXT DEFAULT 'percent',
-                fixed_price REAL DEFAULT 0,
-                percent REAL DEFAULT 30,
+                payment_type TEXT DEFAULT 'percent', 
+                fixed_price REAL DEFAULT 0,          
+                percent REAL DEFAULT 30,             
                 
-                miniapp_enabled INTEGER DEFAULT 1,
+                miniapp_enabled INTEGER DEFAULT 1,   
                 miniapp_url TEXT DEFAULT NULL,
                 
                 created_at TEXT,
-                expires_at TEXT DEFAULT NULL
+                expires_at TEXT DEFAULT NULL         
             )
         """)
 
@@ -92,17 +92,17 @@ async def init_db():
         await db.execute("""
             CREATE TABLE IF NOT EXISTS api_keys (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                bot_id INTEGER DEFAULT 0,
-                provider TEXT NOT NULL,
-                name TEXT NOT NULL,
+                bot_id INTEGER DEFAULT 0,          
+                provider TEXT NOT NULL,            
+                name TEXT NOT NULL,                
                 api_key TEXT NOT NULL,
                 model TEXT NOT NULL,
-                base_url TEXT NOT NULL,
-                is_paid INTEGER DEFAULT 0,
+                base_url TEXT NOT NULL,            
+                is_paid INTEGER DEFAULT 0,         
                 daily_limit INTEGER DEFAULT 1000,
                 used_today INTEGER DEFAULT 0,
-                is_alive INTEGER DEFAULT 1,
-                is_active INTEGER DEFAULT 1,
+                is_alive INTEGER DEFAULT 1,        
+                is_active INTEGER DEFAULT 1,       
                 last_error TEXT,
                 last_reset_date TEXT,
                 created_at TEXT
@@ -113,9 +113,9 @@ async def init_db():
             CREATE TABLE IF NOT EXISTS partner_payments (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 bot_id INTEGER,
-                method TEXT,
+                method TEXT,                
                 title TEXT,
-                details TEXT,
+                details TEXT,               
                 is_manual INTEGER DEFAULT 1,
                 is_active INTEGER DEFAULT 1,
                 FOREIGN KEY (bot_id) REFERENCES bots(bot_id)
@@ -142,7 +142,7 @@ async def create_user(user_id: int, username: str = None, full_name: str = None,
             INSERT OR IGNORE INTO users 
             (user_id, username, full_name, registered_at, referrer_id, last_reset_date, free_balance)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, username, full_name, now, referrer_id, today, 20.0))
+        """, (user_id, username, full_name, now, referrer_id, today, 20.0)) 
 
         if referrer_id and referrer_id != user_id:
             await db.execute("""
