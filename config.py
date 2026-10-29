@@ -8,28 +8,22 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "ВАШ_ТОКЕН_СЮДА")
 ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_IDS", "123456789").split(",") if x.strip()]
 
 # === База данных ===
-# ИСПРАВЛЕНО: используем /tmp, чтобы сервер мог создать файл базы
-DB_PATH = "/tmp/bot.db"
+# ИСПРАВЛЕНО: используем /tmp и новое имя файла, чтобы база создалась заново
+DB_PATH = "/tmp/bot_v2.db"
 
 # === Лимиты бесплатного тарифа ===
-FREE_DAILY_REQUESTS = 15          # запросов в день
-FREE_DAILY_IMAGES = 3             # картинок в день
-FREE_COOLDOWN_SECONDS = 8         # минимальная пауза между запросами
+FREE_DAILY_REQUESTS = 15
+FREE_DAILY_IMAGES = 3
+FREE_COOLDOWN_SECONDS = 8
 
-# === Реферальная система (гибкая) ===
-REFERRAL_ENABLED = True           # Можно полностью отключить
-REFERRAL_PERCENT = 7              # Общий % с пополнения реферала
-
-# Как делим реферальный %:
-# 0.5 = 50% на выводимый баланс, 50% на бонусный
+# === Реферальная система ===
+REFERRAL_ENABLED = True
+REFERRAL_PERCENT = 7
 REFERRAL_WITHDRAWABLE_SHARE = 0.5
-
-# Бонусы при регистрации по рефке (разовые)
-REFERRAL_BONUS_FOR_INVITER = 30   # бонус пригласившему (на bonus_balance)
-REFERRAL_BONUS_FOR_NEWBIE = 15    # бонус новичку (на bonus_balance)
+REFERRAL_BONUS_FOR_INVITER = 30
+REFERRAL_BONUS_FOR_NEWBIE = 15
 
 # === Зеркала / White-label ===
-# Минимальные цены, ниже которых full-партнёр ставить не может
 MIN_TARIFF_PRICES = {
     "week": 39,
     "month": 399,
@@ -37,53 +31,22 @@ MIN_TARIFF_PRICES = {
     "business": 1790,
 }
 
-# Условия для empty-зеркал (пустой конструктор)
-EMPTY_MIRROR_FIXED_PRICE = 1990      # фикс цена в месяц (если выбирает fixed)
-EMPTY_MIRROR_DEFAULT_PERCENT = 30    # наша доля в % (если выбирает percent)
+EMPTY_MIRROR_FIXED_PRICE = 1990
+EMPTY_MIRROR_DEFAULT_PERCENT = 30
+FULL_MIRROR_PRICE = 990
 
-# Создание full-зеркала
-FULL_MIRROR_PRICE = 990              # разовая или месячная цена за full-копию (можно потом изменить)
-
-# === Тарифы (можно менять в админке позже) ===
+# === Тарифы ===
 TARIFFS = {
-    "week": {
-        "name": "Тест на неделю",
-        "price": 39,
-        "days": 7,
-        "daily_requests": 80,
-        "daily_images": 15,
-    },
-    "month": {
-        "name": "Месяц",
-        "price": 399,
-        "days": 30,
-        "daily_requests": 200,
-        "daily_images": 40,
-    },
-    "pro": {
-        "name": "PRO на месяц",
-        "price": 899,
-        "days": 30,
-        "daily_requests": 500,
-        "daily_images": 100,
-    },
-    "business": {
-        "name": "Бизнес",
-        "price": 1790,
-        "days": 30,
-        "daily_requests": 2000,
-        "daily_images": 300,
-    },
+    "week": {"name": "Тест на неделю", "price": 39, "days": 7, "daily_requests": 80, "daily_images": 15},
+    "month": {"name": "Месяц", "price": 399, "days": 30, "daily_requests": 200, "daily_images": 40},
+    "pro": {"name": "PRO на месяц", "price": 899, "days": 30, "daily_requests": 500, "daily_images": 100},
+    "business": {"name": "Бизнес", "price": 1790, "days": 30, "daily_requests": 2000, "daily_images": 300},
 }
 
-# === Цены разовых услуг (в рублях) ===
+# === Цены разовых услуг ===
 PRICES = {
-    "image_gen": 5,           # генерация картинки
-    "photo_solve": 3,         # решение задачи по фото
-    # Заглушки (пока не реализованы):
-    # "photo_animate": 105,
-    # "create_site": 990,
-    # "create_miniapp": 1490,
+    "image_gen": 5,
+    "photo_solve": 3,
 }
 
 # === Сообщения ===
