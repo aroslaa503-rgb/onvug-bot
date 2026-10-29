@@ -8,7 +8,8 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "ВАШ_ТОКЕН_СЮДА")
 ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_IDS", "123456789").split(",") if x.strip()]
 
 # === База данных ===
-DB_PATH = "data/bot.db"
+# ИСПРАВЛЕНО: используем /tmp, чтобы сервер мог создать файл базы
+DB_PATH = "/tmp/bot.db"
 
 # === Лимиты бесплатного тарифа ===
 FREE_DAILY_REQUESTS = 15          # запросов в день
