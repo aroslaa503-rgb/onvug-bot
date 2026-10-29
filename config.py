@@ -8,8 +8,8 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "ВАШ_ТОКЕН_СЮДА")
 ADMIN_IDS = [int(x) for x in os.getenv("ADMIN_IDS", "123456789").split(",") if x.strip()]
 
 # === База данных ===
-# ИСПРАВЛЕНО: используем /tmp и новое имя файла, чтобы база создалась заново
-DB_PATH = "/tmp/bot_v2.db"
+# ИСПРАВЛЕНО: используем /tmp, чтобы сервер мог создать базу
+DB_PATH = "/tmp/bot.db"
 
 # === Лимиты бесплатного тарифа ===
 FREE_DAILY_REQUESTS = 15
@@ -23,62 +23,118 @@ REFERRAL_WITHDRAWABLE_SHARE = 0.5
 REFERRAL_BONUS_FOR_INVITER = 30
 REFERRAL_BONUS_FOR_NEWBIE = 15
 
-# === Зеркала / White-label ===
+# === Зеркала ===
 MIN_TARIFF_PRICES = {
     "week": 39,
     "month": 399,
     "pro": 899,
     "business": 1790,
 }
-
 EMPTY_MIRROR_FIXED_PRICE = 1990
 EMPTY_MIRROR_DEFAULT_PERCENT = 30
 FULL_MIRROR_PRICE = 990
 
 # === Тарифы ===
 TARIFFS = {
-    "week": {"name": "Тест на неделю", "price": 39, "days": 7, "daily_requests": 80, "daily_images": 15},
-    "month": {"name": "Месяц", "price": 399, "days": 30, "daily_requests": 200, "daily_images": 40},
-    "pro": {"name": "PRO на месяц", "price": 899, "days": 30, "daily_requests": 500, "daily_images": 100},
-    "business": {"name": "Бизнес", "price": 1790, "days": 30, "daily_requests": 2000, "daily_images": 300},
+    "week": {
+        "name": "Тест • 7 дней",
+        "price": 39,
+        "days": 7,
+        "daily_requests": 80,
+        "daily_images": 15,
+    },
+    "month": {
+        "name": "Стандарт • 30 дней",
+        "price": 399,
+        "days": 30,
+        "daily_requests": 200,
+        "daily_images": 40,
+    },
+    "pro": {
+        "name": "PRO • 30 дней",
+        "price": 899,
+        "days": 30,
+        "daily_requests": 500,
+        "daily_images": 100,
+    },
+    "business": {
+        "name": "Бизнес • 30 дней",
+        "price": 1790,
+        "days": 30,
+        "daily_requests": 2000,
+        "daily_images": 300,
+    },
 }
 
-# === Цены разовых услуг ===
 PRICES = {
     "image_gen": 5,
     "photo_solve": 3,
 }
 
-# === Сообщения ===
-WELCOME_TEXT = """👋 Привет! Я — твой универсальный ИИ-помощник.
+# ================== ТЕКСТЫ ==================
 
-Что я умею прямо сейчас:
+WELCOME_TEXT = """👋 <b>Привет!</b>
 
-📸 <b>Решение задач по фото</b> — просто пришли фото задачи
-💬 <b>Умный чат</b> — задавай любые вопросы
-🎨 <b>Генерация картинок</b> — напиши «нарисуй ...»
-📖 Помощь с домашкой, сочинениями, объяснениями
+Я — ИИ-помощник для учёбы, работы и творчества.
 
-Бесплатно доступно ограниченное количество запросов в день.
-Подписка открывает гораздо больше возможностей.
+<b>Что умею:</b>
+• Решать задачи по фото
+• Отвечать на любые вопросы
+• Генерировать картинки
+• Помогать с домашкой и текстами
 
-Нажми кнопку ниже, чтобы начать 👇"""
+Бесплатно доступно несколько запросов в день.
+Подписка снимает ограничения.
 
-PROFILE_TEMPLATE = """👤 <b>Твой профиль</b>
+Выбери действие в меню 👇"""
 
-🆔 ID: <code>{user_id}</code>
-📅 С нами: {days_with_us} дн.
+HELP_TEXT = """ℹ️ <b>Помощь</b>
+
+<b>Основные функции:</b>
+• Просто напиши вопрос — отвечу
+• Пришли фото задачи — решу по шагам
+• Напиши «нарисуй ...» — создам картинку
+
+<b>Лимиты:</b>
+На бесплатном тарифе есть дневные ограничения.
+Чтобы убрать их — оформи подписку в разделе «Тарифы».
+
+<b>Скоро:</b>
+• Оживление фото
+• Создание сайтов
+• Mini App
+• Деплой кода
+
+По вопросам пиши администратору."""
+
+PROFILE_TEMPLATE = """👤 <b>Профиль</b>
+
+ID: <code>{user_id}</code>
+С нами: {days_with_us} дн.
 
 💰 <b>Баланс</b>
-• Бесплатный: {free_balance} ₽
-• Бонусный: {bonus_balance} ₽
-• Платный: {paid_balance} ₽
+Основной: {main_balance} ₽
+Бонусный: {bonus_balance} ₽
+К выводу: {withdrawable_balance} ₽
 
-📊 Сегодня использовано:
-• Запросов: {used_requests}/{max_requests}
-• Картинок: {used_images}/{max_images}
+📊 Сегодня:
+Запросы: {used_requests}/{max_requests}
+Картинки: {used_images}/{max_images}
 
-🔗 Реферальная ссылка:
+🔗 Твоя ссылка:
+<code>https://t.me/{bot_username}?start={user_id}</code>"""
+
+REFERRAL_TEXT = """🔗 <b>Реферальная система</b>
+
+Твоя ссылка:
 <code>https://t.me/{bot_username}?start={user_id}</code>
 
-Приглашай друзей — получай {ref_percent}% с их пополнений!"""
+Приглашено: {invited}
+Заработано: {earned} ₽
+
+Ты получаешь <b>{percent}%</b> с каждого пополнения друга.
+Новичок получает {newbie_bonus} ₽ бонусом, ты — {inviter_bonus} ₽."""
+
+TARIFFS_TEXT = """💎 <b>Тарифы</b>
+
+Выбери подходящий план:"""
