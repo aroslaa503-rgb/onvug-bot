@@ -28,6 +28,9 @@ async def main():
     for router in all_routers:
         dp.include_router(router)
 
+    # ОЧИСТКА СТАРЫХ ПОДКЛЮЧЕНИЙ (чтобы не было ошибки Conflict)
+    await bot.delete_webhook(drop_pending_updates=True)
+
     logger.info("Бот запускается...")
     await dp.start_polling(bot)
 
