@@ -143,3 +143,12 @@ async def referral_handler(event: Message | CallbackQuery):
         await event.answer()
     else:
         await event.answer(text, parse_mode=ParseMode.HTML)
+
+
+# ================== ВОЗВРАТ В МЕНЮ ==================
+
+@router.callback_query(F.data == "back_to_menu")
+async def back_to_menu(callback: CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer("Главное меню:", reply_markup=kb.main_menu_kb())
+    await callback.answer()
